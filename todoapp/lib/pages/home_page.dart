@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:todoapp/constant/api.dart';
 import 'package:todoapp/models/todo.dart';
+import 'package:todoapp/widgets/app_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +15,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Todo> myTodos = [];
+  bool isLoading = true;
   void fetchData() async {
     try {
       http.Response response = await http.get(Uri.parse(api));
@@ -29,6 +31,9 @@ class _HomePageState extends State<HomePage> {
         myTodos.add(t);
       });
       print(myTodos.length);
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       print("Error is $e");
     }
@@ -43,10 +48,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.red,
-        title: Center(child: Text('Todo App')),
-      ),
+      appBar: CustomAppBar(),
     );
   }
+
+  
 }
