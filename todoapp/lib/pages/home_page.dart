@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:todoapp/constant/api.dart';
 import 'package:todoapp/models/todo.dart';
 import 'package:todoapp/widgets/app_bar.dart';
+import 'package:todoapp/widgets/container_todo.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -49,8 +50,19 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
+      backgroundColor: Color(0xff001133),
+      body: isLoading
+          ? CircularProgressIndicator()
+          : ListView(
+              children: myTodos.map((e) {
+                return ContainerTodo(
+                  id: 1,
+                  title: 's',
+                  desc: 'ddd',
+                  isDone: false,
+                );
+              }).toList(),
+            ),
     );
   }
-
-  
 }
