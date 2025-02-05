@@ -45,6 +45,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void delete_todo(String id) async {
+    try {
+      http.Response response = await http.delete(Uri.parse(api + "/" + id));
+      fetchData();
+      setState(() {});
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   void initState() {
     fetchData();
@@ -56,20 +66,21 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: CustomAppBar(),
       backgroundColor: Color(0xff001133),
-      body: Column(
-        children: [
-          PieChart(
-            dataMap: {
-              "done": done.toDouble(),
-              "incomplete": (myTodos.length - done).toDouble(),
-            },
-          ),
-          isLoading
-              ? CircularProgressIndicator()
-              : Expanded(
-                child: ListView(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            PieChart(
+              dataMap: {
+                "done": done.toDouble(),
+                "incomplete": (myTodos.length - done).toDouble(),
+              },
+            ),
+            isLoading
+                ? CircularProgressIndicator()
+                : Column(
                     children: myTodos.map((e) {
                       return ContainerTodo(
+                        onPressed: () => delete_todo(e.id.toString()),
                         id: e.id,
                         title: e.title,
                         desc: e.desc,
@@ -77,8 +88,8 @@ class _HomePageState extends State<HomePage> {
                       );
                     }).toList(),
                   ),
-              ),
-        ],
+          ],
+        ),
       ),
     );
   }

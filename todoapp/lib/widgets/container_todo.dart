@@ -6,11 +6,13 @@ class ContainerTodo extends StatelessWidget {
       required this.id,
       required this.title,
       required this.desc,
-      required this.isDone});
+      required this.isDone,
+      this.onPressed});
   final int id;
   final String title;
   final String desc;
   final bool isDone;
+  final void Function()? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,7 @@ class ContainerTodo extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: onPressed,
                     icon: Icon(Icons.delete, color: Colors.white),
                   ),
                 ],
