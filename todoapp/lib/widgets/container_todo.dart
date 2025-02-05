@@ -28,14 +28,35 @@ class ContainerTodo extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {},
+                    icon: Icon(Icons.delete, color: Colors.white),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 5,
+              ),
+              SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Text(
+                  desc,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),

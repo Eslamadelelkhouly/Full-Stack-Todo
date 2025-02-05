@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pie_chart/pie_chart.dart';
 import 'package:todoapp/constant/api.dart';
 import 'package:todoapp/models/todo.dart';
 import 'package:todoapp/widgets/app_bar.dart';
@@ -15,6 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int done = 0;
   List<Todo> myTodos = [];
   bool isLoading = true;
   void fetchData() async {
@@ -29,6 +31,9 @@ class _HomePageState extends State<HomePage> {
           date: todo['date'],
           isDone: todo['isDone'],
         );
+        if (todo['isDone']) {
+          done += 1;
+        }
         myTodos.add(t);
       });
       print(myTodos.length);
@@ -51,18 +56,30 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: CustomAppBar(),
       backgroundColor: Color(0xff001133),
-      body: isLoading
-          ? CircularProgressIndicator()
-          : ListView(
-              children: myTodos.map((e) {
-                return ContainerTodo(
-                  id: 1,
-                  title: 's',
-                  desc: 'ddd',
-                  isDone: false,
-                );
-              }).toList(),
-            ),
+      body: Column(
+        children: [
+          PieChart(
+            dataMap: {
+              "done": done.toDouble(),
+              "incomplete": (myTodos.length - done).toDouble(),
+            },
+          ),
+          isLoading
+              ? CircularProgressIndicator()
+              : Expanded(
+                child: ListView(
+                    children: myTodos.map((e) {
+                      return ContainerTodo(
+                        id: e.id,
+                        title: e.title,
+                        desc: e.desc,
+                        isDone: e.isDone,
+                      );
+                    }).toList(),
+                  ),
+              ),
+        ],
+      ),
     );
   }
 }
