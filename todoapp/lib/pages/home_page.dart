@@ -49,7 +49,9 @@ class _HomePageState extends State<HomePage> {
     try {
       http.Response response = await http.delete(Uri.parse(api + "/" + id));
       fetchData();
-      setState(() {});
+      setState(() {
+        myTodos = [];
+      });
     } catch (e) {
       print(e);
     }
@@ -90,6 +92,27 @@ class _HomePageState extends State<HomePage> {
                   ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50),
+        ),
+        child: Icon(
+          Icons.add,
+          color: Colors.pink,
+        ),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Container(
+                height: 300,
+                color: Colors.white,
+              );
+            },
+          );
+        },
       ),
     );
   }
