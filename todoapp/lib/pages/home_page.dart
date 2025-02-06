@@ -45,43 +45,58 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void post_todo({String title = "", String desc = ""}) async {
+  void post_todo({required title, required String desc}) async {
     try {
-      http.Response response = await http.post(
-        Uri.parse(api),
-        headers: <String, String>{
-          "Content-Type": "application/json;charset=UTF-8",
+      final Uri url = Uri.parse(api); // Ensure correct endpoint
+
+      final http.Response response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: jsonEncode(
-          <String, dynamic>{
-            "title": title,
-            "desc": desc,
-            "isDone": false,
-          },
-        ),
+        body: jsonEncode({
+          "title": title.isEmpty ? "Untitled" : title,
+          "desc": desc.isEmpty ? "No description" : desc,
+          "isDone": false,
+        }),
       );
+
       if (response.statusCode == 201) {
         setState(() {
-          myTodos = [];
+          fetchData();
         });
-        fetchData();
       } else {
-        print("Something have a wrong");
+        print(
+            "Something went wrong: ${response.statusCode}, Response: ${response.body}");
       }
     } catch (e) {
-      print(e.toString());
+      print("Error: $e");
     }
   }
 
   void delete_todo(String id) async {
     try {
-      http.Response response = await http.delete(Uri.parse(api + "/" + id));
-      fetchData();
-      setState(() {
-        myTodos = [];
-      });
+      print("Deleting todo with ID: $id");
+      final Uri deleteUrl =
+          Uri.parse(api+id+'/'); // Updated URL format
+      http.Response response = await http.delete(deleteUrl);
+
+      // Log the response status code and body for debugging
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 204) {
+        // 204 No Content is the success status for DELETE
+        setState(() {
+          myTodos.removeWhere((todo) => todo.id.toString() == id);
+        });
+      } else {
+        print("Failed to delete todo. Status code: ${response.statusCode}");
+        print("Error message: ${response.body}");
+      }
     } catch (e) {
-      print(e);
+      print("Error deleting todo: $e");
     }
   }
 
@@ -145,8 +160,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<dynamic> CustomBottomSheet(BuildContext context) {
-    String title = "";
-    String desc = "";
+    TextEditingController titleController = TextEditingController();
+    TextEditingController descController = TextEditingController();
+
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -170,91 +186,62 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: MediaQuery.of(context).size.width * 0.90,
                   child: TextField(
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
+                    controller: titleController, // ✅ Use controller
+                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Title',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
+                      hintStyle: TextStyle(color: Colors.white),
                       filled: true,
                       fillColor: Color(0xff001133),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      disabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onSubmitted: (value) {
-                      setState(() {
-                        title = value;
-                      });
-                    },
                   ),
                 ),
-                SizedBox(
-                  height: 15,
-                ),
+                SizedBox(height: 15),
                 Container(
                   width: MediaQuery.of(context).size.width * 0.90,
                   child: TextField(
+                    controller: descController, // ✅ Use controller
                     maxLines: 5,
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Description',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
+                      hintStyle: TextStyle(color: Colors.white),
                       filled: true,
                       fillColor: Color(0xff001133),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      disabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onSubmitted: (value) {
-                      setState(() {
-                        desc = value;
-                      });
-                    },
                   ),
                 ),
-                SizedBox(
-                  height: 15,
-                ),
+                SizedBox(height: 15),
                 Container(
                   width: 160,
                   height: 40,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.pink,
-                      textStyle: TextStyle(color: Colors.white),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () => post_todo(title: title, desc: desc),
+                    onPressed: () {
+                      String title = titleController.text.trim();
+                      String desc = descController.text.trim();
+
+                      post_todo(title: title, desc: desc);
+                      Navigator.pop(context); // ✅ Close BottomSheet
+                    },
                     child: Text(
                       'Add',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 280,
-                )
+                SizedBox(height: 280),
               ],
             ),
           ),
