@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:pie_chart/pie_chart.dart';
 import 'package:todoapp/constant/api.dart';
 import 'package:todoapp/models/todo.dart';
-import 'package:todoapp/utils/method.dart';
 import 'package:todoapp/widgets/app_bar.dart';
 import 'package:todoapp/widgets/container_todo.dart';
 
@@ -18,20 +17,91 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int done = 0;
+  List<Todo> myTodos = [];
   bool isLoading = true;
-  List<Todo> MyTodos = [];
-  ApiMethods apiMethods = ApiMethods();
+  void fetchData() async {
+    try {
+      http.Response response = await http.get(Uri.parse(api));
+      var data = json.decode(response.body);
+      data.forEach((todo) {
+        Todo t = Todo(
+          id: todo['id'],
+          title: todo['title'],
+          desc: todo['desc'],
+          date: todo['date'],
+          isDone: todo['isDone'],
+        );
+        if (todo['isDone']) {
+          done += 1;
+        }
+        myTodos.add(t);
+      });
+      print(myTodos.length);
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error is $e");
+    }
+  }
+
+  void post_todo({required title, required String desc}) async {
+    try {
+      final Uri url = Uri.parse(api); // Ensure correct endpoint
+
+      final http.Response response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          "title": title.isEmpty ? "Untitled" : title,
+          "desc": desc.isEmpty ? "No description" : desc,
+          "isDone": false,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        setState(() {
+          fetchData();
+        });
+      } else {
+        print(
+            "Something went wrong: ${response.statusCode}, Response: ${response.body}");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  void delete_todo(String id) async {
+    try {
+      print("Deleting todo with ID: $id");
+      final Uri deleteUrl = Uri.parse(api + id + '/'); // Updated URL format
+      http.Response response = await http.delete(deleteUrl);
+
+      // Log the response status code and body for debugging
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 204) {
+        // 204 No Content is the success status for DELETE
+        setState(() {
+          myTodos.removeWhere((todo) => todo.id.toString() == id);
+        });
+      } else {
+        print("Failed to delete todo. Status code: ${response.statusCode}");
+        print("Error message: ${response.body}");
+      }
+    } catch (e) {
+      print("Error deleting todo: $e");
+    }
+  }
 
   @override
   void initState() {
-    apiMethods.fetchData().then(
-      (value) {
-        setState(() {
-          MyTodos = value;
-          isLoading = false;
-        });
-      },
-    );
+    fetchData();
     super.initState();
   }
 
@@ -46,7 +116,7 @@ class _HomePageState extends State<HomePage> {
             PieChart(
               dataMap: {
                 "Done": done.toDouble(),
-                "Incomplete": (MyTodos.length - done).toDouble(),
+                "Incomplete": (myTodos.length - done).toDouble(),
               },
               legendOptions: LegendOptions(
                 legendTextStyle: TextStyle(
@@ -59,9 +129,9 @@ class _HomePageState extends State<HomePage> {
             isLoading
                 ? CircularProgressIndicator()
                 : Column(
-                    children: MyTodos.map((e) {
+                    children: myTodos.map((e) {
                       return ContainerTodo(
-                        onPressed: () {},
+                        onPressed: () => delete_todo(e.id.toString()),
                         id: e.id,
                         title: e.title,
                         desc: e.desc,
@@ -115,7 +185,7 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: MediaQuery.of(context).size.width * 0.90,
                   child: TextField(
-                    controller: titleController,
+                    controller: titleController, // ✅ Use controller
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Title',
@@ -132,7 +202,7 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: MediaQuery.of(context).size.width * 0.90,
                   child: TextField(
-                    controller: descController,
+                    controller: descController, // ✅ Use controller
                     maxLines: 5,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
@@ -160,7 +230,9 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () {
                       String title = titleController.text.trim();
                       String desc = descController.text.trim();
-                      Navigator.pop(context);
+
+                      post_todo(title: title, desc: desc);
+                      Navigator.pop(context); // ✅ Close BottomSheet
                     },
                     child: Text(
                       'Add',
